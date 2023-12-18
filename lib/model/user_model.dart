@@ -12,11 +12,13 @@ class TaskModel {
   final String task;
   final String subTask;
   final DateTime? timestamp;
+  bool isChecked;
 
   TaskModel({
     required this.task,
     required this.subTask,
     required this.timestamp,
+    this.isChecked = false,
   });
     factory TaskModel.fromSnapshot(DocumentSnapshot snapshot) {
     Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;

@@ -73,158 +73,170 @@ class _TodoViewState extends State<TodoView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        future: FirebaseFirestore.instance.collection("client").doc(uid).get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          } else {
-            var tasksData = snapshot.data?.data() ?? {};
-            List tasksList = tasksData['tasks'] ?? [];
-
-            List filteredTasks = tasksList.where((task) {
-              String taskName = task["task"].toString().toLowerCase();
-              String searchQuery = searchController.text.toLowerCase();
-              return taskName.contains(searchQuery);
-            }).toList();
-
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Search Your Tasks........',
+    return WillPopScope(
+                  onWillPop: () async {
+        //ScaffoldMessenger.of(context).showSnackBar(
+          // const SnackBar(
+          //   content:
+          //       Text('Pop Scr You cannot go to previous screen.'),
+          //   backgroundColor: Colors.red,
+          // ),
+      //  );
+        return false;
+      },
+      child: Scaffold(
+        body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          future: FirebaseFirestore.instance.collection("client").doc(uid).get(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const CircularProgressIndicator();
+            } else {
+              var tasksData = snapshot.data?.data() ?? {};
+              List tasksList = tasksData['tasks'] ?? [];
+    
+              List filteredTasks = tasksList.where((task) {
+                String taskName = task["task"].toString().toLowerCase();
+                String searchQuery = searchController.text.toLowerCase();
+                return taskName.contains(searchQuery);
+              }).toList();
+    
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Search Your Tasks........',
+                      ),
+                      onChanged: (query) {
+                        setState(() {});
+                      },
                     ),
-                    onChanged: (query) {
-                      setState(() {});
-                    },
                   ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: filteredTasks.length,
-                    itemBuilder: (context, index) {
-                      String documentId = snapshot.data!.id;
-                      Map<String, dynamic>? data =
-                          filteredTasks[index] as Map<String, dynamic>?;
-                      TaskModel task = TaskModel(
-                        task: data?["task"] ?? "",
-                        subTask: data?["subTask"] ?? "",
-                        timestamp: data?["timestamp"] != null
-                            ? (data?["timestamp"] as Timestamp).toDate()
-                            : null,
-                      );
-
-                      return Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width / 1 - 5,
-                          height: 200,
-                          margin: EdgeInsets.all(8),
-                          child: ListTile(
-                            title: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 20),
-                                  child: Row(
-                                    children: [
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: Center(
-                                          child: Text(
-                                            task.task,
-                                            style: TextStyle(
-                                              fontSize: 25,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color.fromARGB(255, 173, 25, 153),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredTasks.length,
+                      itemBuilder: (context, index) {
+                        String documentId = snapshot.data!.id;
+                        Map<String, dynamic>? data =
+                            filteredTasks[index] as Map<String, dynamic>?;
+                        TaskModel task = TaskModel(
+                          task: data?["task"] ?? "",
+                          subTask: data?["subTask"] ?? "",
+                          timestamp: data?["timestamp"] != null
+                              ? (data?["timestamp"] as Timestamp).toDate()
+                              : null,
+                        );
+    
+                        return Card(
+                          elevation: 5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width / 1 - 5,
+                            height: 200,
+                            margin: EdgeInsets.all(8),
+                            child: ListTile(
+                              title: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 20),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(width: 8),
+                                        Expanded(
+                                          child: Center(
+                                            child: Text(
+                                              task.task,
+                                              style: TextStyle(
+                                                fontSize: 25,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromARGB(255, 173, 25, 153),
+                                              ),
                                             ),
                                           ),
                                         ),
+                                        PopupMenuButton<String>(
+                                          onSelected: (value) {
+                                            if (value == 'delete') {
+                                              _deleteTask(documentId, task);
+                                            } else if (value == 'edit') {
+                                              onEdit(documentId, task);
+                                            }
+                                          },
+                                          itemBuilder: (context) => [
+                                            PopupMenuItem(
+                                              value: 'delete',
+                                              child: Text('Delete'),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'edit',
+                                              child: Text('Edit'),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 40),
+                                    child: Text(
+                                      task.subTask,
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 20,
                                       ),
-                                      PopupMenuButton<String>(
-                                        onSelected: (value) {
-                                          if (value == 'delete') {
-                                            _deleteTask(documentId, task);
-                                          } else if (value == 'edit') {
-                                            onEdit(documentId, task);
-                                          }
-                                        },
-                                        itemBuilder: (context) => [
-                                          PopupMenuItem(
-                                            value: 'delete',
-                                            child: Text('Delete'),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'edit',
-                                            child: Text('Edit'),
-                                          ),
-                                        ],
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        task.timestamp != null
+                                            ? DateFormat('dd-MM-yyyy')
+                                                .format(task.timestamp!)
+                                            : 'No date',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat('HH:mm').format(task.timestamp!),
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 40),
-                                  child: Text(
-                                    task.subTask,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      task.timestamp != null
-                                          ? DateFormat('dd-MM-yyyy')
-                                              .format(task.timestamp!)
-                                          : 'No date',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Text(
-                                      DateFormat('HH:mm').format(task.timestamp!),
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              );
+            }
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddTaskView()),
             );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddTaskView()),
-          );
-        },
-        child: Icon(Icons.add),
+          },
+          child: Icon(Icons.add),
+        ),
       ),
     );
   }

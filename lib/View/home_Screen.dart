@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mytodo/View/group_view.dart';
 import 'package:mytodo/View/settings_page.dart';
+import 'package:mytodo/View/settings_view.dart';
 import 'package:mytodo/View/todo_view.dart';
 import 'package:mytodo/controller/Home_controller.dart';
 import 'package:mytodo/model/user_model.dart';
+import 'package:mytodo/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
+
 
 
 class HomeScreen extends StatefulWidget {
@@ -20,71 +24,82 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final UserModel currentUser = homeController.getCurrentUser();
-
-    return Scaffold(
-      body: Column(
-        children: [
-          const SizedBox(
-            height: 20,
-            width: 20,
+    return WillPopScope(
+            onWillPop: () async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Pop Screen Disabled. You cannot go to previous screen.'),
+            backgroundColor: Colors.red,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: CircleAvatar(
-                  radius: 25,
-                  backgroundImage: Image.network(currentUser.photoURL).image,
+        );
+        return false;
+      },
+      child: Scaffold(
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 20,
+              width: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundImage: Image.network(currentUser.photoURL).image,
+                  ),
                 ),
-              ),
-              const Text(
-                "My Todo",
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                const Text(
+                  "My Todo",
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
-              ),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome, ${currentUser.displayName}!',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                  color: Colors.red,
+                IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome, ${currentUser.displayName}!',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    color: Colors.red,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Builder(
-            builder: (BuildContext context) =>
-                Expanded(child: pages[_selectIndex]),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.supervised_user_circle_rounded),
-            label: "Group",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: "Tasks",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
-        ],
-        currentIndex: _selectIndex,
-        onTap: _onItemTapped,
+              ],
+            ),
+            Builder(
+              builder: (BuildContext context) =>
+                  Expanded(child: pages[_selectIndex]),
+            ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.supervised_user_circle_rounded),
+              label: "Group",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add),
+              label: "Tasks",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: "Settings",
+            ),
+          ],
+          currentIndex: _selectIndex,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
